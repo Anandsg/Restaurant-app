@@ -1,4 +1,3 @@
-// Store the order in local storage
 function storeOrder() {
 	const tableNum = document.getElementById('tableNum').value;
 	const category = document.getElementById('category').value;
@@ -18,9 +17,26 @@ function storeOrder() {
 		'quantity': quantity
 	});
 	localStorage.setItem('orders', JSON.stringify(orders));
+
+	// Make HTTP POST request to API endpoint
+	fetch('https://crudcrud.com/api/0d0ed4f85d044931abe7b50df64c928b/orders', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			'tableNum': tableNum,
+			'category': category,
+			'dishName': dishName,
+			'quantity': quantity
+		})
+	})
+	.then(response => response.json())
+	.then(data => console.log(data))
+	.catch(error => console.error(error));
+
 	displayOrders();
 }
-
 // Display the orders by table
 function displayOrders() {
 	let orders = JSON.parse(localStorage.getItem('orders')) || {};
@@ -32,7 +48,7 @@ function displayOrders() {
 				ordersHTML += '<h4>' + category.charAt(0).toUpperCase() + category.slice(1) + 's</h4>';
 				ordersHTML += '<ul>';
 				for (let i = 0; i < orders[tableNum][category].length; i++) {
-					ordersHTML += '<li>' + orders[tableNum][category][i].dishName + ' - ' + orders[tableNum][category][i].quantity + '</li>';
+					ordersHTML += '<li>' + orders[tableNum][category][i].dishName + ' - ' + orders[tableNum][category][i].quantity + ' <button onclick="deleteOrder(' + tableNum + ', \'' + category + '\', ' + i + ')">Delete</button></li>';
 				}
 				ordersHTML += '</ul>';
 			}
@@ -40,3 +56,20 @@ function displayOrders() {
 	}
 	document.getElementById('orders').innerHTML = ordersHTML;
 }
+// Delete an order
+function deleteOrder(tableNum, category, index, orderId) {
+	let orders = JSON.parse(localStorage.getItem('orders')) || {};
+	orders[tableNum][category].splice(index, 1);
+	localStorage.setItem('orders', JSON.stringify(orders));
+
+// Make HTTP DELETE request to API endpoint
+fetch('https://crudcrud.com/api/0d0ed4f85d044931abe7b50df64c928b/orders/' + orderId, {
+	method: 'DELETE'
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error(error));
+
+displayOrders();
+}
+
